@@ -1,0 +1,32 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: NAME
+spec:
+  endpointSelector:
+    matchLabels:
+      app: APP
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app: FROM-APP
+      toPorts:
+        - ports:
+            - port: FROM-PORT
+  egress:
+    - toFQDNs:
+        - matchName: TO-URL
+      toPorts:
+        - ports:
+            - port: URL-PORT
+    - toEndpoints:
+        - matchLabels:
+            app: TO-ENDPOINT
+      toPorts:
+        - ports:
+            - port: TO-ENDPOINT-PORT
+    - toEntities:
+        - ENTITY
+      toPorts:
+        - ports:
+            - port: ENTITY-PORT
