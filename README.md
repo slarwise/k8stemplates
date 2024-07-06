@@ -1,7 +1,10 @@
 # Templates
 
-Templates for resources I use often. Here's a script for listing the available
-templates (give 0 arguments) or downloading a specific one.
+Templates. tmp lates
+
+fd.
+
+        <h>
 
 ```sh
 #!/bin/bash
@@ -14,3 +17,49 @@ else
     curl --silent "$URL"
 fi
 ```
+
+<html>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+
+opa gamgam sty
+
+</html>
