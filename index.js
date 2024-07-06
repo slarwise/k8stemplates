@@ -4,6 +4,7 @@ const resultCode = document.getElementById("result");
 const copyButton = document.getElementById("copy");
 
 let template;
+const cachedFiles = {};
 
 function replaceAll(mappings, text) {
   let result = text.slice();
@@ -19,21 +20,19 @@ const deployment = {
     { id: "image", default: "nginx" },
     { id: "port", default: "8080" },
   ],
+  file: "deployment.yaml",
   template: (inputs) => {
-    fetch("templates/deployment.yaml").then((value) => {
-      value.text().then((text) => {
-        const result = replaceAll(
-          {
-            NAME: inputs.name,
-            APP: inputs.name,
-            IMAGE: inputs.image,
-            PORT: inputs.port,
-          },
-          text,
-        );
-        resultCode.textContent = result;
-      });
-    });
+    console.log(cachedFiles[template.file]);
+    const result = replaceAll(
+      {
+        NAME: inputs.name,
+        APP: inputs.name,
+        IMAGE: inputs.image,
+        PORT: inputs.port,
+      },
+      cachedFiles[template.file],
+    );
+    return result;
   },
 };
 
@@ -45,49 +44,48 @@ const service = {
     { id: "port", default: "8080" },
     { id: "targetPort", default: "http" },
   ],
+  file: "service.yaml",
   template: (inputs) => {
-    fetch("templates/service.yaml").then((value) => {
-      value.text().then((text) => {
-        const result = replaceAll(
-          {
-            NAME: inputs.name,
-            POD_SELECTOR: inputs.podSelector,
-            PORT_NAME: inputs.portName,
-            PORT: inputs.port,
-            TARGET_PORT: inputs.targetPort,
-          },
-          text,
-        );
-        resultCode.textContent = result;
-      });
-    });
+    const result = replaceAll(
+      {
+        NAME: inputs.name,
+        POD_SELECTOR: inputs.podSelector,
+        PORT_NAME: inputs.portName,
+        PORT: inputs.port,
+        TARGET_PORT: inputs.targetPort,
+      },
+      cachedFiles[template.file],
+    );
+    return result;
   },
 };
 
 const templates = {
-  deployment: deployment,
-  service: service,
+  deployment,
+  service,
 };
 
-async function refreshResult() {
+function refreshResult() {
   const inputIds = template.inputs.map((input) => input.id);
   let inputs = {};
   for (const id of inputIds) {
     inputs[id] = document.getElementById(id).value;
   }
-  await template.template(inputs);
-  // console.log(result);
-  // const text = await result.text();
-  // console.log(text);
+  const result = template.template(inputs);
   resultCode.textContent = result;
 }
 
-function refreshTemplate() {
+async function refreshTemplate() {
   const templateName = templateSelect.value;
   template = templates[templateName];
   if (template === undefined) {
     console.error(`Got unexpected template \`${templateName}\``);
     return;
+  }
+  if (!(template.file in cachedFiles)) {
+    const value = await fetch(`templates/${template.file}`);
+    const text = await value.text();
+    cachedFiles[template.file] = text;
   }
   let inputsHtml = "";
   for (const input of template.inputs) {
