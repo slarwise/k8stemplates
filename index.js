@@ -3,7 +3,15 @@ const inputsDiv = document.getElementById("inputs");
 const resultCode = document.getElementById("result");
 const copyButton = document.getElementById("copy");
 
-let template = "";
+let template;
+
+function replaceAll(mappings, text) {
+  let result = text.slice();
+  for (const [placeholder, replacement] of Object.entries(mappings)) {
+    result = result.replaceAll(`$${placeholder}`, replacement);
+  }
+  return result;
+}
 
 const deployment = {
   inputs: [
@@ -12,28 +20,20 @@ const deployment = {
     { id: "port", default: "8080" },
   ],
   template: (inputs) => {
-    return `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ${inputs.name}
-  labels:
-    app: ${inputs.name}
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ${inputs.name}
-  template:
-    metadata:
-      labels:
-        app: ${inputs.name}
-    spec:
-      containers:
-        - name: ${inputs.name}
-          image: ${inputs.image}
-          ports:
-            - containerPort: ${inputs.port}
-              name: http`;
+    fetch("templates/deployment.yaml").then((value) => {
+      value.text().then((text) => {
+        const result = replaceAll(
+          {
+            NAME: inputs.name,
+            APP: inputs.name,
+            IMAGE: inputs.image,
+            PORT: inputs.port,
+          },
+          text,
+        );
+        resultCode.textContent = result;
+      });
+    });
   },
 };
 
@@ -46,19 +46,21 @@ const service = {
     { id: "targetPort", default: "http" },
   ],
   template: (inputs) => {
-    return `apiVersion: v1
-kind: Service
-metadata:
-  name: ${inputs.name}
-  labels:
-    app: ${inputs.name}
-spec:
-  selector:
-    app: ${inputs.podSelector}
-  ports:
-    - name: ${inputs.name}
-      port: ${inputs.port}
-      targetPort: ${inputs.targetPort}`;
+    fetch("templates/service.yaml").then((value) => {
+      value.text().then((text) => {
+        const result = replaceAll(
+          {
+            NAME: inputs.name,
+            POD_SELECTOR: inputs.podSelector,
+            PORT_NAME: inputs.portName,
+            PORT: inputs.port,
+            TARGET_PORT: inputs.targetPort,
+          },
+          text,
+        );
+        resultCode.textContent = result;
+      });
+    });
   },
 };
 
@@ -67,13 +69,16 @@ const templates = {
   service: service,
 };
 
-function refreshResult() {
+async function refreshResult() {
   const inputIds = template.inputs.map((input) => input.id);
   let inputs = {};
   for (const id of inputIds) {
     inputs[id] = document.getElementById(id).value;
   }
-  const result = template.template(inputs);
+  await template.template(inputs);
+  // console.log(result);
+  // const text = await result.text();
+  // console.log(text);
   resultCode.textContent = result;
 }
 

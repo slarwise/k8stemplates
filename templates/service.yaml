@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: NAME
+  name: $NAME
   labels:
-    app: APP
+    app: $POD_SELECTOR
 spec:
   ports:
-    - name: SERVICE-PORT-NAME
-      port: SERVICE-PORT
-      targetPort: CONTAINER-PORT-NAME-OR-NUMBER
+    - name: $PORT_NAME
+      port: $PORT
+      targetPort: $TARGET_PORT
   selector:
-    app: APP
+    app: $POD_SELECTOR

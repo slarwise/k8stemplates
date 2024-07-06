@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: NAME
+  name: $NAME
   labels:
-    app: APP
+    app: $APP
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: APP
+      app: $APP
   template:
     metadata:
       labels:
-        app: APP
+        app: $APP
     spec:
       containers:
-        - name: APP
-          image: IMAGE
+        - name: $APP
+          image: $IMAGE
           ports:
-            - containerPort: PORT
-              name: PORT-NAME
+            - containerPort: $PORT
+              name: http
