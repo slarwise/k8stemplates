@@ -1,6 +1,6 @@
 # Templates
 
-Templates. tmp lates
+Templates. tmp lates: [I'm feeling lucky]
 
 fd.
 
@@ -63,3 +63,5 @@ fi
 opa gamgam sty
 
 </html>
+
+[I'm feeling lucky]: https://slarwise.github.io/templates/
