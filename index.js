@@ -18,6 +18,9 @@ class Template {
   }
 }
 
+// TODO: Maybe slurp these up automatically from the templates folder. If so,
+//       how do we set default values in a nice way?
+// TODO: Sync the available templates with the template-select list in index.html
 const templates = {
   deployment: new Template("deployment.yaml", {
     name: "my-app",
