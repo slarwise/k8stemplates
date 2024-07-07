@@ -22,7 +22,6 @@ const deployment = {
   ],
   file: "deployment.yaml",
   template: (inputs) => {
-    console.log(cachedFiles[template.file]);
     const result = replaceAll(
       {
         NAME: inputs.name,
