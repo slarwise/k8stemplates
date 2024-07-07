@@ -12,7 +12,7 @@ class Template {
   build(values) {
     let result = this.text.slice();
     for (const input of this.inputs) {
-      result = result.replaceAll(`$${input.id}`, values[input.id]);
+      result = result.replaceAll(`$\{${input.id}\}`, values[input.id]);
     }
     return result;
   }
@@ -31,6 +31,20 @@ const templates = {
     { id: "port", default: "8080" },
     { id: "target_port", default: "http" },
   ]),
+  config_map: new Template("config-map.yaml", [
+    { id: "name", default: "my-config-map" },
+    { id: "key", default: "debug" },
+    { id: "value", default: "true" },
+  ]),
+  html: new Template("index.html", []),
+  kustomization: new Template("kustomization.yaml", []),
+  service_monitor: new Template("service-monitor.yaml", [
+    { id: "name", default: "my-service-monitor" },
+    { id: "port", default: "http" },
+    { id: "service_selector", default: "my-service" },
+    { id: "namespace", default: "my-namespace" },
+  ]),
+  cilium_network_policy: new Template("cilium-network-policy.yaml", []),
 };
 
 function refreshTemplate() {
@@ -75,7 +89,5 @@ copyButton.onclick = () => {
   const result = resultCode.textContent;
   navigator.clipboard.writeText(result);
 };
-// TODO: I think this one is fired when changing the template
-//       as well as changing the inputs
 
 initializeTemplate();

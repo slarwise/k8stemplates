@@ -1,13 +1,13 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: NAME
+  name: ${name}
 spec:
   endpoints:
-    - port: SERVICE-PORT-NAME
+    - port: ${port}
   selector:
     matchLabels:
-      app: APP
+      app: ${service_selector}
   namespaceSelector:
     matchNames:
-      - NAMESPACE
+      - ${namespace}

@@ -1,32 +1,26 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: NAME
+  name: my-network-policy
 spec:
   endpointSelector:
     matchLabels:
-      app: APP
+      app: my-app
   ingress:
     - fromEndpoints:
         - matchLabels:
-            app: FROM-APP
+            app: prometheus
       toPorts:
         - ports:
-            - port: FROM-PORT
+            - port: metrics
   egress:
     - toFQDNs:
-        - matchName: TO-URL
+        - matchName: https://oopa.gangnam.style
       toPorts:
         - ports:
-            - port: URL-PORT
-    - toEndpoints:
-        - matchLabels:
-            app: TO-ENDPOINT
-      toPorts:
-        - ports:
-            - port: TO-ENDPOINT-PORT
+            - port: 443
     - toEntities:
-        - ENTITY
+        - kubeapi
       toPorts:
         - ports:
-            - port: ENTITY-PORT
+            - port: 443
