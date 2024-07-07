@@ -1,90 +1,59 @@
-const templateSelect = document.getElementById("template-select");
-const inputsDiv = document.getElementById("inputs");
-const resultCode = document.getElementById("result");
-const copyButton = document.getElementById("copy");
-
-let template;
-const cachedFiles = {};
-
-function replaceAll(mappings, text) {
-  let result = text.slice();
-  for (const [placeholder, replacement] of Object.entries(mappings)) {
-    result = result.replaceAll(`$${placeholder}`, replacement);
+class Template {
+  constructor(filename, inputs) {
+    this.inputs = inputs;
+    this.filename = filename;
   }
-  return result;
+
+  async initialize() {
+    const result = await fetch(`templates/${this.filename}`);
+    this.text = await result.text();
+  }
+
+  build(values) {
+    let result = this.text.slice();
+    for (const input of this.inputs) {
+      result = result.replaceAll(`$${input.id}`, values[input.id]);
+    }
+    return result;
+  }
 }
 
-const deployment = {
-  inputs: [
+const templates = {
+  deployment: new Template("deployment.yaml", [
     { id: "name", default: "my-app" },
     { id: "image", default: "nginx" },
     { id: "port", default: "8080" },
-  ],
-  file: "deployment.yaml",
-  template: (inputs) => {
-    const result = replaceAll(
-      {
-        NAME: inputs.name,
-        APP: inputs.name,
-        IMAGE: inputs.image,
-        PORT: inputs.port,
-      },
-      cachedFiles[template.file],
-    );
-    return result;
-  },
-};
-
-const service = {
-  inputs: [
+  ]),
+  service: new Template("service.yaml", [
     { id: "name", default: "my-service" },
-    { id: "podSelector", default: "my-app" },
-    { id: "portName", default: "http" },
+    { id: "pod_selector", default: "my-app" },
+    { id: "port_name", default: "http" },
     { id: "port", default: "8080" },
-    { id: "targetPort", default: "http" },
-  ],
-  file: "service.yaml",
-  template: (inputs) => {
-    const result = replaceAll(
-      {
-        NAME: inputs.name,
-        POD_SELECTOR: inputs.podSelector,
-        PORT_NAME: inputs.portName,
-        PORT: inputs.port,
-        TARGET_PORT: inputs.targetPort,
-      },
-      cachedFiles[template.file],
-    );
-    return result;
-  },
+    { id: "target_port", default: "http" },
+  ]),
 };
 
-const templates = {
-  deployment,
-  service,
-};
-
-function refreshResult() {
+function refreshTemplate() {
+  const templateName = templateSelect.value;
+  const template = templates[templateName];
   const inputIds = template.inputs.map((input) => input.id);
-  let inputs = {};
+  let values = {};
   for (const id of inputIds) {
-    inputs[id] = document.getElementById(id).value;
+    values[id] = document.getElementById(id).value;
   }
-  const result = template.template(inputs);
+  const result = template.build(values);
   resultCode.textContent = result;
 }
 
-async function refreshTemplate() {
+async function initializeTemplate() {
   const templateName = templateSelect.value;
-  template = templates[templateName];
+  const template = templates[templateName];
   if (template === undefined) {
     console.error(`Got unexpected template \`${templateName}\``);
     return;
   }
-  if (!(template.file in cachedFiles)) {
-    const value = await fetch(`templates/${template.file}`);
-    const text = await value.text();
-    cachedFiles[template.file] = text;
+  if (template.text === undefined) {
+    await template.initialize();
   }
   let inputsHtml = "";
   for (const input of template.inputs) {
@@ -92,15 +61,21 @@ async function refreshTemplate() {
     inputsHtml += `<input type="text" id="${input.id}" name="${input.id}" value="${input.default}" />\n`;
   }
   inputsDiv.innerHTML = inputsHtml;
-  refreshResult();
+  refreshTemplate();
 }
 
-templateSelect.onchange = refreshTemplate;
+const inputsDiv = document.getElementById("inputs");
+const resultCode = document.getElementById("result");
+const templateSelect = document.getElementById("template-select");
+const copyButton = document.getElementById("copy");
 
+templateSelect.onchange = initializeTemplate;
+inputsDiv.oninput = refreshTemplate;
 copyButton.onclick = () => {
   const result = resultCode.textContent;
   navigator.clipboard.writeText(result);
 };
+// TODO: I think this one is fired when changing the template
+//       as well as changing the inputs
 
-document.addEventListener("input", refreshResult);
-refreshTemplate();
+initializeTemplate();
