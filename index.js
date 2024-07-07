@@ -1,64 +1,25 @@
 class Template {
-  constructor(displayName, filename, inputs) {
-    this.displayName = displayName;
-    this.filename = filename;
+  constructor(name, text, inputs) {
+    this.name = name;
+    this.text = text;
     this.inputs = inputs;
-  }
-
-  async initialize() {
-    const result = await fetch(`templates/${this.filename}`);
-    this.text = await result.text();
   }
 
   build(values) {
     let result = this.text.slice();
     for (const i in this.inputs) {
-      result = result.replaceAll(`$\{${i}\}`, values[i]);
+      const placeholderPattern = new RegExp(`\\$\{${i},[^}]*\}`, "g");
+      const noPlaceholderPattern = new RegExp(`\\$\{${i}\}`, "g");
+      result = result.replaceAll(placeholderPattern, values[i]);
+      result = result.replaceAll(noPlaceholderPattern, values[i]);
     }
     return result;
   }
 }
 
-// TODO: Maybe slurp these up automatically from the templates folder. If so,
-//       how do we set default values in a nice way? And it is not possible
-//       to get all files in a folder from the templates folder from the frontend,
-//       so need to have some kind of config file. Or a "compilation" step...
-const templates = {
-  deployment: new Template("Deployment", "deployment.yaml", {
-    name: "my-app",
-    image: "nginx",
-    port: "8080",
-  }),
-  service: new Template("Service", "service.yaml", {
-    name: "my-service",
-    pod_selector: "my-app",
-    port_name: "http",
-    port: "8080",
-    target_port: "http",
-  }),
-  config_map: new Template("ConfigMap", "config-map.yaml", {
-    name: "my-config-map",
-    key: "debug",
-    value: "true",
-  }),
-  html: new Template("HTML", "index.html", {}),
-  kustomization: new Template("Kustomization", "kustomization.yaml", {}),
-  service_monitor: new Template("ServiceMonitor", "service-monitor.yaml", {
-    name: "my-service-monitor",
-    port: "http",
-    service_selector: "my-service",
-    namespace: "my-namespace",
-  }),
-  cilium_network_policy: new Template(
-    "Cilium Network Policy",
-    "cilium-network-policy.yaml",
-    {},
-  ),
-};
-
 function refreshTemplate() {
   const templateName = templateSelect.value;
-  const template = templates[templateName];
+  const template = templates.find((t) => t.name === templateName);
   let values = {};
   for (const id in template.inputs) {
     values[id] = document.getElementById(id).value;
@@ -67,15 +28,12 @@ function refreshTemplate() {
   resultCode.textContent = result;
 }
 
-async function initializeTemplate() {
+function initializeTemplate() {
   const templateName = templateSelect.value;
-  const template = templates[templateName];
+  const template = templates.find((t) => t.name === templateName);
   if (template === undefined) {
     console.error(`Got unexpected template \`${templateName}\``);
     return;
-  }
-  if (template.text === undefined) {
-    await template.initialize();
   }
   let innerHTML = "";
   for (const [key, value] of Object.entries(template.inputs)) {
@@ -86,10 +44,47 @@ async function initializeTemplate() {
   refreshTemplate();
 }
 
+let templates = [];
+const placeholderPattern = /\$\{([^\}]+)\}/g;
+
+async function initialize() {
+  if (Object.keys(templates).length === 0) {
+    let result = await fetch("templates.txt");
+    let availableTemplates = await result.text();
+    for (let t of availableTemplates.split("\n")) {
+      if (t === "") {
+        continue;
+      }
+      const result = await fetch(`templates/${t}`);
+      const text = await result.text();
+      const name = t.split(".")[0];
+      const matches = text.matchAll(placeholderPattern);
+      let inputs = {};
+      if (matches) {
+        for (const m of matches) {
+          const split = m[1].split(",");
+          const key = split[0];
+          if (key in inputs) {
+            continue;
+          }
+          let placeholder = key;
+          if (split.length > 1) {
+            placeholder = split[1].trim();
+          }
+          inputs[key] = placeholder;
+        }
+      }
+      templates.push(new Template(name, text, inputs));
+    }
+  }
+  initializeSelector();
+  initializeTemplate();
+}
+
 function initializeSelector() {
   let innerHTML = "";
-  for (let [id, template] of Object.entries(templates)) {
-    innerHTML += `<option value="${id}">${template.displayName}</option>\n`;
+  for (const t of templates) {
+    innerHTML += `<option value="${t.name}">${t.name}</option>\n`;
   }
   templateSelect.innerHTML = innerHTML;
 }
@@ -106,5 +101,4 @@ copyButton.onclick = () => {
   navigator.clipboard.writeText(result);
 };
 
-initializeSelector();
-initializeTemplate();
+initialize();

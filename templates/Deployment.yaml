@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${name}
+  name: ${name, my-app}
   labels:
     app: ${name}
 spec:
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: ${name}
-          image: ${image}
+          image: ${image, nginx/nginx}
           ports:
-            - containerPort: ${port}
+            - containerPort: ${port, 8080}
               name: http
