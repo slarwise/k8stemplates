@@ -24,7 +24,7 @@ class Template {
 
 function refreshTemplate() {
   const templateName = templateSelect.value;
-  const template = templates.find((t) => t.name === templateName);
+  const template = templates[templateName];
   let values = {};
   for (const id in template.inputs) {
     values[id] = document.getElementById(id).value;
@@ -35,7 +35,7 @@ function refreshTemplate() {
 
 async function initializeTemplate() {
   const templateName = templateSelect.value;
-  const template = templates.find((t) => t.name === templateName);
+  const template = templates[templateName];
   if (template === undefined) {
     console.error(`Got unexpected template \`${templateName}\``);
     return;
@@ -52,15 +52,17 @@ async function initializeTemplate() {
   refreshTemplate();
 }
 
-let templates = [];
+let templates = {};
 const placeholderPattern = /\$\{([^\}]+)\}/g;
 
 async function initialize() {
   let result = await fetch("config.json");
   let config = await result.json();
   for (let template of config) {
-    templates.push(
-      new Template(template.name, template.filename, template.inputs),
+    templates[template.name] = new Template(
+      template.name,
+      template.filename,
+      template.inputs,
     );
   }
   initializeSelector();
@@ -69,8 +71,8 @@ async function initialize() {
 
 function initializeSelector() {
   let innerHTML = "";
-  for (const t of templates) {
-    innerHTML += `<option value="${t.name}">${t.name}</option>\n`;
+  for (const t in templates) {
+    innerHTML += `<option value="${t}">${t}</option>\n`;
   }
   templateSelect.innerHTML = innerHTML;
 }
