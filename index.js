@@ -11,48 +11,47 @@ class Template {
 
   build(values) {
     let result = this.text.slice();
-    for (const input of this.inputs) {
-      result = result.replaceAll(`$\{${input.id}\}`, values[input.id]);
+    for (const i in this.inputs) {
+      result = result.replaceAll(`$\{${i}\}`, values[i]);
     }
     return result;
   }
 }
 
 const templates = {
-  deployment: new Template("deployment.yaml", [
-    { id: "name", default: "my-app" },
-    { id: "image", default: "nginx" },
-    { id: "port", default: "8080" },
-  ]),
-  service: new Template("service.yaml", [
-    { id: "name", default: "my-service" },
-    { id: "pod_selector", default: "my-app" },
-    { id: "port_name", default: "http" },
-    { id: "port", default: "8080" },
-    { id: "target_port", default: "http" },
-  ]),
-  config_map: new Template("config-map.yaml", [
-    { id: "name", default: "my-config-map" },
-    { id: "key", default: "debug" },
-    { id: "value", default: "true" },
-  ]),
-  html: new Template("index.html", []),
-  kustomization: new Template("kustomization.yaml", []),
-  service_monitor: new Template("service-monitor.yaml", [
-    { id: "name", default: "my-service-monitor" },
-    { id: "port", default: "http" },
-    { id: "service_selector", default: "my-service" },
-    { id: "namespace", default: "my-namespace" },
-  ]),
-  cilium_network_policy: new Template("cilium-network-policy.yaml", []),
+  deployment: new Template("deployment.yaml", {
+    name: "my-app",
+    image: "nginx",
+    port: "8080",
+  }),
+  service: new Template("service.yaml", {
+    name: "my-service",
+    pod_selector: "my-app",
+    port_name: "http",
+    port: "8080",
+    target_port: "http",
+  }),
+  config_map: new Template("config-map.yaml", {
+    name: "my-config-map",
+    key: "debug",
+    value: "true",
+  }),
+  html: new Template("index.html", {}),
+  kustomization: new Template("kustomization.yaml", {}),
+  service_monitor: new Template("service-monitor.yaml", {
+    name: "my-service-monitor",
+    port: "http",
+    service_selector: "my-service",
+    namespace: "my-namespace",
+  }),
+  cilium_network_policy: new Template("cilium-network-policy.yaml", {}),
 };
 
 function refreshTemplate() {
   const templateName = templateSelect.value;
   const template = templates[templateName];
-  const inputIds = template.inputs.map((input) => input.id);
   let values = {};
-  for (const id of inputIds) {
+  for (const id in template.inputs) {
     values[id] = document.getElementById(id).value;
   }
   const result = template.build(values);
@@ -70,9 +69,9 @@ async function initializeTemplate() {
     await template.initialize();
   }
   let inputsHtml = "";
-  for (const input of template.inputs) {
-    inputsHtml += `<label for="${input.id}">${input.id}: </label>\n`;
-    inputsHtml += `<input type="text" id="${input.id}" name="${input.id}" value="${input.default}" />\n`;
+  for (const i in template.inputs) {
+    inputsHtml += `<label for="${i}">${i}: </label>\n`;
+    inputsHtml += `<input type="text" id="${i}" name="${i}" value="${i}" />\n`;
   }
   inputsDiv.innerHTML = inputsHtml;
   refreshTemplate();
