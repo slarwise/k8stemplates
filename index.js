@@ -35,6 +35,11 @@ function refreshTemplate() {
 
 async function initializeTemplate() {
   const templateName = templateSelect.value;
+  if (templateName === "placeholder") {
+    inputsDiv.innerHTML = "";
+    resultCode.textContent = "";
+    return;
+  }
   const template = templates[templateName];
   if (template === undefined) {
     console.error(`Got unexpected template \`${templateName}\``);
@@ -70,11 +75,11 @@ async function initialize() {
 }
 
 function initializeSelector() {
-  let innerHTML = "";
+  let options = `<option value="placeholder">---</option>`;
   for (const t in templates) {
-    innerHTML += `<option value="${t}">${t}</option>\n`;
+    options += `<option value="${t}">${t}</option>\n`;
   }
-  templateSelect.innerHTML = innerHTML;
+  templateSelect.innerHTML = options;
 }
 
 const inputsDiv = document.getElementById("inputs");
