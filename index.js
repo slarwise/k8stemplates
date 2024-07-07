@@ -1,6 +1,28 @@
 class Template {
-  constructor(name, text, inputs) {
+  constructor(name, filename) {
     this.name = name;
+    this.filename = filename;
+  }
+
+  async initialize() {
+    const result = await fetch(`templates/${this.filename}`);
+    const text = await result.text();
+    const matches = text.matchAll(placeholderPattern);
+    let inputs = {};
+    if (matches) {
+      for (const m of matches) {
+        const split = m[1].split(",");
+        const key = split[0];
+        if (key in inputs) {
+          continue;
+        }
+        let placeholder = key;
+        if (split.length > 1) {
+          placeholder = split[1].trim();
+        }
+        inputs[key] = placeholder;
+      }
+    }
     this.text = text;
     this.inputs = inputs;
   }
@@ -28,12 +50,15 @@ function refreshTemplate() {
   resultCode.textContent = result;
 }
 
-function initializeTemplate() {
+async function initializeTemplate() {
   const templateName = templateSelect.value;
   const template = templates.find((t) => t.name === templateName);
   if (template === undefined) {
     console.error(`Got unexpected template \`${templateName}\``);
     return;
+  }
+  if (template.text === undefined) {
+    await template.initialize();
   }
   let innerHTML = "";
   for (const [key, value] of Object.entries(template.inputs)) {
@@ -51,34 +76,16 @@ async function initialize() {
   if (Object.keys(templates).length === 0) {
     let result = await fetch("templates.txt");
     let availableTemplates = await result.text();
-    for (let t of availableTemplates.split("\n")) {
-      if (t === "") {
+    for (let filename of availableTemplates.split("\n")) {
+      if (filename === "") {
         continue;
       }
-      const result = await fetch(`templates/${t}`);
-      const text = await result.text();
-      const name = t.split(".")[0];
-      const matches = text.matchAll(placeholderPattern);
-      let inputs = {};
-      if (matches) {
-        for (const m of matches) {
-          const split = m[1].split(",");
-          const key = split[0];
-          if (key in inputs) {
-            continue;
-          }
-          let placeholder = key;
-          if (split.length > 1) {
-            placeholder = split[1].trim();
-          }
-          inputs[key] = placeholder;
-        }
-      }
-      templates.push(new Template(name, text, inputs));
+      const name = filename.split(".")[0];
+      templates.push(new Template(name, filename));
     }
   }
   initializeSelector();
-  initializeTemplate();
+  await initializeTemplate();
 }
 
 function initializeSelector() {
