@@ -75,7 +75,7 @@ async function initialize() {
 }
 
 function initializeSelector() {
-  let options = `<option value="placeholder">---</option>`;
+  let options = `<option value="placeholder">---------------------</option>`;
   for (const t in templates) {
     options += `<option value="${t}">${t}</option>\n`;
   }
