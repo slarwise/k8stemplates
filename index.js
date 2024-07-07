@@ -1,30 +1,13 @@
 class Template {
-  constructor(name, filename) {
+  constructor(name, filename, inputs) {
     this.name = name;
     this.filename = filename;
+    this.inputs = inputs;
   }
 
   async initialize() {
     const result = await fetch(`templates/${this.filename}`);
-    const text = await result.text();
-    const matches = text.matchAll(placeholderPattern);
-    let inputs = {};
-    if (matches) {
-      for (const m of matches) {
-        const split = m[1].split(",");
-        const key = split[0];
-        if (key in inputs) {
-          continue;
-        }
-        let placeholder = key;
-        if (split.length > 1) {
-          placeholder = split[1].trim();
-        }
-        inputs[key] = placeholder;
-      }
-    }
-    this.text = text;
-    this.inputs = inputs;
+    this.text = await result.text();
   }
 
   build(values) {
@@ -73,16 +56,12 @@ let templates = [];
 const placeholderPattern = /\$\{([^\}]+)\}/g;
 
 async function initialize() {
-  if (Object.keys(templates).length === 0) {
-    let result = await fetch("templates.txt");
-    let availableTemplates = await result.text();
-    for (let filename of availableTemplates.split("\n")) {
-      if (filename === "") {
-        continue;
-      }
-      const name = filename.split(".")[0];
-      templates.push(new Template(name, filename));
-    }
+  let result = await fetch("config.json");
+  let config = await result.json();
+  for (let template of config) {
+    templates.push(
+      new Template(template.name, template.filename, template.inputs),
+    );
   }
   initializeSelector();
   await initializeTemplate();
