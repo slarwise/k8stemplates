@@ -110,7 +110,7 @@ func parseTemplate(id, contents string) Template {
 		}
 		t.Inputs = append(t.Inputs, []string{key, defaultVal})
 	}
-	t.Text = strings.Join(lines, "\n")
+	t.Text = strings.Join(lines[:len(lines)-1], "\n")
 	return t
 }
 

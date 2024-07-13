@@ -1,5 +1,6 @@
 const inputsDiv = document.getElementById("inputs");
 const resultCode = document.getElementById("result");
+const copyButton = document.getElementById("copy");
 
 const inputElements = inputsDiv.getElementsByTagName("input");
 
@@ -22,13 +23,17 @@ function updateResult() {
   const inputs = getUserInput();
   let result = template.slice();
   for (const [key, val] of Object.entries(inputs)) {
-    console.log(key, val);
     const pattern = new RegExp(`\\$\{${key}\}`, "g");
     result = result.replaceAll(pattern, val);
   }
-  console.log(result);
   resultCode.textContent = result;
+}
+
+function copyResult() {
+  const result = resultCode.textContent;
+  navigator.clipboard.writeText(result);
 }
 
 init();
 inputsDiv.addEventListener("input", updateResult);
+copyButton.addEventListener("click", copyResult);
