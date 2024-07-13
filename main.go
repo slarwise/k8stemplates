@@ -67,6 +67,12 @@ func main() {
 			fatal("Could not create file %s: %s", filePath, err.Error())
 		}
 		templateTemplate.Execute(output, t)
+
+		// Store the template on its own for curling
+		standaloneFilePath := path.Join(outputDir, t.Id+".tmpl")
+		if err = os.WriteFile(standaloneFilePath, []byte(t.Text), 0755); err != nil {
+			fatal("Could not write to file %s: %s", standaloneFilePath, err.Error())
+		}
 	}
 	if err = copyFile("index.js", path.Join(outputDir, "index.js")); err != nil {
 		fatal("Failed to copy index.js: %s", err.Error())
@@ -110,7 +116,7 @@ func parseTemplate(id, contents string) Template {
 		}
 		t.Inputs = append(t.Inputs, []string{key, defaultVal})
 	}
-	t.Text = strings.Join(lines[:len(lines)-1], "\n")
+	t.Text = strings.Join(lines, "\n")
 	return t
 }
 

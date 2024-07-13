@@ -30,7 +30,8 @@ function updateResult() {
 }
 
 function copyResult() {
-  const result = resultCode.textContent.replace(/[ ]+$/, "");
+  let result = resultCode.textContent.trim();
+  result += "\n";
   navigator.clipboard.writeText(result);
 }
 
