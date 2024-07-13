@@ -1,97 +1,34 @@
-class Template {
-  constructor(name, filename, inputs) {
-    this.name = name;
-    this.filename = filename;
-    this.inputs = inputs;
-  }
+const inputsDiv = document.getElementById("inputs");
+const resultCode = document.getElementById("result");
 
-  async initialize() {
-    const result = await fetch(`templates/${this.filename}`);
-    this.text = await result.text();
-  }
+const inputElements = inputsDiv.getElementsByTagName("input");
 
-  build(values) {
-    let result = this.text.slice();
-    for (const i in this.inputs) {
-      const placeholderPattern = new RegExp(`\\$\{${i},[^}]*\}`, "g");
-      const noPlaceholderPattern = new RegExp(`\\$\{${i}\}`, "g");
-      result = result.replaceAll(placeholderPattern, values[i]);
-      result = result.replaceAll(noPlaceholderPattern, values[i]);
-    }
-    return result;
+function getUserInput() {
+  const inputs = {};
+  for (const i of inputElements) {
+    inputs[i.id] = i.value;
   }
+  return inputs;
 }
 
-function refreshTemplate() {
-  const templateName = templateSelect.value;
-  const template = templates[templateName];
-  let values = {};
-  for (const id in template.inputs) {
-    values[id] = document.getElementById(id).value;
+let template;
+function init() {
+  template = resultCode.textContent;
+  updateResult();
+  resultCode.style.visibility = "visible";
+}
+
+function updateResult() {
+  const inputs = getUserInput();
+  let result = template.slice();
+  for (const [key, val] of Object.entries(inputs)) {
+    console.log(key, val);
+    const pattern = new RegExp(`\\$\{${key}\}`, "g");
+    result = result.replaceAll(pattern, val);
   }
-  const result = template.build(values);
+  console.log(result);
   resultCode.textContent = result;
 }
 
-async function initializeTemplate() {
-  const templateName = templateSelect.value;
-  if (templateName === "placeholder") {
-    inputsDiv.innerHTML = "";
-    resultCode.textContent = "";
-    return;
-  }
-  const template = templates[templateName];
-  if (template === undefined) {
-    console.error(`Got unexpected template \`${templateName}\``);
-    return;
-  }
-  if (template.text === undefined) {
-    await template.initialize();
-  }
-  let innerHTML = "";
-  for (const [key, value] of Object.entries(template.inputs)) {
-    innerHTML += `<label for="${key}">${key}: </label>\n`;
-    innerHTML += `<input type="text" id="${key}" name="${key}" value="${value}" />\n`;
-  }
-  inputsDiv.innerHTML = innerHTML;
-  refreshTemplate();
-}
-
-let templates = {};
-const placeholderPattern = /\$\{([^\}]+)\}/g;
-
-async function initialize() {
-  let result = await fetch("config.json");
-  let config = await result.json();
-  for (let template of config) {
-    templates[template.name] = new Template(
-      template.name,
-      template.filename,
-      template.inputs,
-    );
-  }
-  initializeSelector();
-  await initializeTemplate();
-}
-
-function initializeSelector() {
-  let options = `<option value="placeholder">---------------------</option>`;
-  for (const t in templates) {
-    options += `<option value="${t}">${t}</option>\n`;
-  }
-  templateSelect.innerHTML = options;
-}
-
-const inputsDiv = document.getElementById("inputs");
-const resultCode = document.getElementById("result");
-const templateSelect = document.getElementById("template-select");
-const copyButton = document.getElementById("copy");
-
-templateSelect.onchange = initializeTemplate;
-inputsDiv.oninput = refreshTemplate;
-copyButton.onclick = () => {
-  const result = resultCode.textContent;
-  navigator.clipboard.writeText(result);
-};
-
-initialize();
+init();
+inputsDiv.addEventListener("input", updateResult);

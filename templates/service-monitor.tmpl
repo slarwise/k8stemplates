@@ -1,0 +1,58 @@
+Service Monitor
+namespace = my-namespace
+service_monitor = my-service-monitor
+service = my-service
+deployment = my-deployment
+port = 8080
+port_name = http
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ${service_monitor}
+spec:
+  endpoints:
+    - port: ${port_name}
+  selector:
+    matchLabels:
+      app: my-app
+  namespaceSelector:
+    matchNames:
+      - ${namespace}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${service}
+  labels:
+    app: my-app
+spec:
+  ports:
+    - name: ${port_name}
+      port: ${port}
+      targetPort: ${port_name}
+  selector:
+    app: my-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${deployment}
+  labels:
+    app: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: my-pod
+          image: nginx/nginx
+          ports:
+            - containerPort: ${port}
+              name: ${port_name}

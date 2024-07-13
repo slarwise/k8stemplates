@@ -1,7 +1,7 @@
 .PHONY: build serve
 
 build:
-	python3 build.py > config.json
+	go run main.go
 
 serve: build
-	python3 -m http.server
+	python3 -m http.server -d public

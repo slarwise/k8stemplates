@@ -1,7 +1,12 @@
+Deployment
+name = my-app
+image = nginx/nginx
+port = 8080
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${name, my-app}
+  name: ${name}
   labels:
     app: ${name}
 spec:
@@ -16,7 +21,7 @@ spec:
     spec:
       containers:
         - name: ${name}
-          image: ${image, nginx/nginx}
+          image: ${image}
           ports:
-            - containerPort: ${port, 8080}
+            - containerPort: ${port}
               name: http

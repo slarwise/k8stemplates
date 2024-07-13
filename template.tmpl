@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Templates</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+
+<body>
+  <h1>Templates</h1>
+  {{ range $t := .AvailableTemplates }}
+  <a href="./{{ index $t 0 }}.html">{{ index $t 1 }}</a>
+  {{end}}
+  <br>
+  <br>
+  <div id="inputs">
+    {{ range $i := .Template.Inputs }}
+    <label for="{{ index $i 0 }}">{{ index $i 0 }}: </label>
+    <input type="text" id="{{ index $i 0 }}" name="{{ index $i 0 }}" value="{{ index $i 1 }}" />
+    {{ end }}
+  </div>
+  <hr>
+  <button type="button" id="copy">Copy</button>
+  <pre>
+    <code id="result" style="visibility:hidden">
+{{ .Text }}
+    </code>
+  </pre>
+  <script src="index.js"></script>
+</body>
